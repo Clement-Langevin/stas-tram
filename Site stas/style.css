@@ -1,0 +1,9 @@
+body { font-family: system-ui; background:#111; color:#fff; margin:0;
+       display:flex; align-items:center; justify-content:center; min-height:100vh; }
+.widget { text-align:center; padding:2rem; }
+.ligne { background:#009647; border-radius:50%; width:56px; height:56px;
+         display:inline-flex; align-items:center; justify-content:center;
+         font-weight:bold; font-size:1.4rem; }
+.passage { font-size:2rem; margin:0.8rem 0; }
+.heure { color:#888; font-size:1.1rem; }
+#maj { color:#666; font-size:0.8rem; margin-top:1rem; }
