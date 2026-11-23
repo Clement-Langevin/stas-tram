@@ -1,6 +1,5 @@
-const GTFS_RT_URL = "https://bus-prod.saint-etienne-metropole.fr/Public/stas/api/horraires_tc/GTFS-RT.pb";
-const PROXY = "https://api.codetabs.com/v1/proxy?quest=";
-const STOP_ID = "";   // à remplir après avoir vu la liste en console
+const PROXY = "https://stas-proxy.clement-langevin73.workers.dev/";
+const STOP_ID = ""; // à remplir après avoir vu la liste en console
 const container = document.getElementById("departures");
 const status = document.getElementById("status");
 
@@ -22,7 +21,7 @@ message StopTimeEvent { optional int32 delay = 1; optional int64 time = 2; }
 `;
 
 function afficherMessage(msg) {
-  container.innerHTML = `<div>${msg}</div>`;
+  container.innerHTML = `<div class="departure">${msg}</div>`;
 }
 
 function heure(ts) {
@@ -31,18 +30,20 @@ function heure(ts) {
 
 function minutes(ts) {
   const diff = Math.round((ts * 1000 - Date.now()) / 60000);
-  return diff <= 0 ? "à l'approche" : "dans " + diff + " min";
+  if (diff <= 0) return "à l'approche";
+  return "dans " + diff + " min";
 }
 
 async function chargerTempsReel() {
+  status.textContent = "Chargement...";
   try {
+    const res = await fetch(PROXY);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const buffer = await res.arrayBuffer();
+
     const root = protobuf.parse(PROTO).root;
     const FeedMessage = root.lookupType("FeedMessage");
-
-    const res = await fetch(PROXY + encodeURIComponent(GTFS_RT_URL));
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    const buffer = new Uint8Array(await res.arrayBuffer());
-    const feed = FeedMessage.decode(buffer);
+    const feed = FeedMessage.decode(new Uint8Array(buffer));
 
     // Mode découverte : liste les arrêts si STOP_ID est vide
     if (!STOP_ID) {
@@ -75,7 +76,7 @@ async function chargerTempsReel() {
       afficherMessage("Aucun passage trouvé.");
     } else {
       container.innerHTML = departs.slice(0, 5).map(d => `
-        <div>Ligne ${d.route} : ${heure(d.heure)} (${minutes(d.heure)})</div>
+        <div class="departure">Ligne ${d.route} : ${heure(d.heure)} (${minutes(d.heure)})</div>
       `).join("");
     }
     status.textContent = "Mis à jour à " + new Date().toLocaleTimeString("fr-FR");
